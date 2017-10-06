@@ -5,7 +5,7 @@ A simple tutorial of training GAN to model Gamma distribution
 * [Python 3.5](https://www.python.org/downloads/)
 * [TensorFlow 0.13](https://www.tensorflow.org/install/)
 * [Numpy](http://www.numpy.org/)
-* [SciPy](http://www.scipy.org/install.html)
+* [Matplotlib](http://matplotlib.org/users/installing.html)
 
 
 <br>
@@ -23,14 +23,14 @@ $ cd gan_distribution_tutorial
 ```bash
 $ python main.py --mode='train' --shape=2. --scale=2.
 ```
-##### note that shape and scale correspond $k$ and $\theta$ in Gamma distribution
+note that shape and scale correspond k and theta in Gamma distribution
 
 
 #### Evaluate the model
 ```bash
 $ python main.py --mode='eval' --shape=2. --scale=2.
 ```
-##### shape and scale should remain the same as training
+##### note --shape and --scale should remain the same value as training
 
 <br>
 
