@@ -36,6 +36,6 @@ $ python main.py --mode='eval' --shape=2. --scale=2.
 
 ## Results
 
-![alt text](jpg/gan-10000.png)
+![alt text](jpg/gan-7000.png)
 
 
