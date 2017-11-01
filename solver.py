@@ -7,6 +7,7 @@ import matplotlib
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib import animation
 plt.rcParams['figure.figsize'] = (12.0, 6.0) #set default size of plots
 import seaborn as sns
 sns.set(color_codes=True)
@@ -55,9 +56,13 @@ class Solver(object):
 		D_train_step = D_opt.minimize(D_loss, var_list=D_vars)
 		G_train_step = G_opt.minimize(G_loss, var_list=G_vars)
 
+		a = np.linspace(1e-6, 30, 10000).reshape(10000,1)
+		anim_frames = []
+		frame_num = []
 		with tf.Session(config=self.config) as sess:
-			saver = tf.train.Saver(max_to_keep=10)
+			# saver = tf.train.Saver(max_to_keep=10)
 			sess.run(tf.global_variables_initializer())
+			pdf = sess.run(prior, {x: a})
 			for step in range(self.maxiter + 1):
 				data_samples = self.data.sample(100)
 				noise_samples = self.noise.sample(100)
@@ -71,9 +76,21 @@ class Solver(object):
 				if step % 100 == 0:
 					print ('Iter: [%d], loss D: [%.4f], loss G: [%4f], logits real: [%.4f], logits fake: [%.4f]' % (step, dl, gl, lr, lf))
 
-				if step % 1000 == 0 and step != 0:
-					saver.save(sess, './model/gan', global_step = step)
-					print ('gan-%d saved!' % (step))
+				# if step % 1000 == 0 and step != 0:
+				# 	saver.save(sess, './model/gan', global_step = step)
+				# 	print ('gan-%d saved!' % (step))
+					noise_samples = self.noise.sample(self.sample_size)
+					gen_samples = sess.run(theta_fake, {noise: noise_samples})
+					anim_frames.append(gen_samples)
+					frame_num.append(step)
+
+		self._animation(a, pdf, anim_frames, frame_num)
+
+
+
+	
+
+
 	def eval(self, version):
 		noise = tf.placeholder(tf.float32, [None, 3], 'noise')
 		x = tf.placeholder(tf.float32, [None, 1], 'x')
@@ -102,6 +119,51 @@ class Solver(object):
 		plt.savefig(fig_name)
 		plt.close()
 
+	def _animation(self, a, prior, anim_frames, frame_num):
+		f, ax = plt.subplots(figsize=(16, 8))
+		f.suptitle('Generative Adversarial Network', fontsize=15)
+		plt.xlabel('Data values')
+		plt.ylabel('Probability density')
+		ax.set_xlim(0, 30)
+		ax.set_ylim(0, 0.2)
+		line_gamma, = ax.plot([], [], 'g', label='Gamma prior')
+		line_gd, = ax.plot([], [], 'r', label='generated samples')
+		frame_number = ax.text(
+		    0.02,
+		    0.95,
+		    '',
+		    horizontalalignment='left',
+		    verticalalignment='top',
+		    transform=ax.transAxes
+		)
+		ax.legend(ncol=2, loc=9)
+
+		def init():
+			line_gamma.set_data([], [])
+			line_gd.set_data([], [])
+			frame_number.set_text('')
+			return (line_gamma, line_gd, frame_number)
+
+
+		def animate(i):
+			frame_number.set_text(
+			    'Iter: {}/{}'.format(frame_num[i], frame_num[-1])
+			)
+			samples = anim_frames[i]
+			hist, edge = np.histogram(samples, bins=100, density=True)
+			b = np.linspace(edge[0], edge[-1], len(hist))
+			line_gamma.set_data(a, prior)
+			line_gd.set_data(b, hist)
+			return (line_gamma, line_gd, frame_number)
+
+		anim = animation.FuncAnimation(
+		    f,
+		    animate,
+		    init_func=init,
+		    frames=len(anim_frames),
+		    blit=True
+		)
+		anim.save('animation_5_1.mp4', fps=10, extra_args=['-vcodec', 'libx264'])
 
 
 
