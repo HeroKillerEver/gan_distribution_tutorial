@@ -16,7 +16,7 @@ sns.set(color_codes=True)
 
 class Solver(object):
 	"""docstring for Solver"""
-	def __init__(self, data, noise, prior, gan, maxiter=10000, sample_size=10000):
+	def __init__(self, data, noise, prior, gan, maxiter=4000, sample_size=10000):
 		super(Solver, self).__init__()
 		self.data = data
 		self.noise = noise
@@ -31,10 +31,14 @@ class Solver(object):
 		theta = tf.placeholder(tf.float32, [None, 1], 'theta')
 		noise = tf.placeholder(tf.float32, [None, 3], 'noise')
 
+		logits_real = self.gan.discriminator(theta)
+
 		x = tf.placeholder(tf.float32, [None, 1], 'x')
 		prior = self.prior.prob(x)
+		logits_x = self.gan.discriminator(x, reuse=True)
+		D_x = tf.nn.sigmoid(logits_x)
+		
 
-		logits_real = self.gan.discriminator(theta)
 		logits_real_mean = tf.reduce_mean(logits_real)
 
 		theta_fake = self.gan.generator(noise)
@@ -73,7 +77,7 @@ class Solver(object):
 				for k in range(1):
 					gl, lf, _ = sess.run([G_loss, logits_fake_mean, G_train_step], {noise: noise_samples})
 
-				if step % 100 == 0:
+				if step % 10 == 0:
 					print ('Iter: [%d], loss D: [%.4f], loss G: [%4f], logits real: [%.4f], logits fake: [%.4f]' % (step, dl, gl, lr, lf))
 
 				# if step % 1000 == 0 and step != 0:
@@ -81,7 +85,8 @@ class Solver(object):
 				# 	print ('gan-%d saved!' % (step))
 					noise_samples = self.noise.sample(self.sample_size)
 					gen_samples = sess.run(theta_fake, {noise: noise_samples})
-					anim_frames.append(gen_samples)
+					db = sess.run(D_x, {x: a})
+					anim_frames.append((db, gen_samples))
 					frame_num.append(step)
 
 		self._animation(a, pdf, anim_frames, frame_num)
@@ -125,9 +130,10 @@ class Solver(object):
 		plt.xlabel('Data values')
 		plt.ylabel('Probability density')
 		ax.set_xlim(0, 30)
-		ax.set_ylim(0, 0.2)
+		ax.set_ylim(0, 1)
 		line_gamma, = ax.plot([], [], 'g', label='Gamma prior')
 		line_gd, = ax.plot([], [], 'r', label='generated samples')
+		line_db, = ax.plot([], [], 'b', label='decision boundary')
 		frame_number = ax.text(
 		    0.02,
 		    0.95,
@@ -136,25 +142,27 @@ class Solver(object):
 		    verticalalignment='top',
 		    transform=ax.transAxes
 		)
-		ax.legend(ncol=2, loc=9)
+		ax.legend(ncol=4, loc=9)
 
 		def init():
 			line_gamma.set_data([], [])
 			line_gd.set_data([], [])
+			line_db.set_data([], [])
 			frame_number.set_text('')
-			return (line_gamma, line_gd, frame_number)
+			return (line_gamma, line_gd, line_db, frame_number)
 
 
 		def animate(i):
 			frame_number.set_text(
 			    'Iter: {}/{}'.format(frame_num[i], frame_num[-1])
 			)
-			samples = anim_frames[i]
+			db, samples = anim_frames[i]
 			hist, edge = np.histogram(samples, bins=100, density=True)
 			b = np.linspace(edge[0], edge[-1], len(hist))
 			line_gamma.set_data(a, prior)
+			line_db.set_data(a, db)
 			line_gd.set_data(b, hist)
-			return (line_gamma, line_gd, frame_number)
+			return (line_gamma, line_gd, line_db, frame_number)
 
 		anim = animation.FuncAnimation(
 		    f,
@@ -163,7 +171,7 @@ class Solver(object):
 		    frames=len(anim_frames),
 		    blit=True
 		)
-		anim.save('animation_5_1.mp4', fps=10, extra_args=['-vcodec', 'libx264'])
+		anim.save('animation_2_2.mp4', fps=10, extra_args=['-vcodec', 'libx264'])
 
 
 
