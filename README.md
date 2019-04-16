@@ -1,41 +1,49 @@
-# gan distribution tutorial
-A simple tutorial of training GAN to model Gamma distribution 
+# gan distribution demo
+A simple demo of training GAN to generate samples for Gamma distribution 
 
 ## Requirements
 * [Python 3.5](https://www.python.org/downloads/)
-* [TensorFlow 0.13](https://www.tensorflow.org/install/)
+* [TensorFlow 1.6](https://www.tensorflow.org/install/)
 * [Numpy](http://www.numpy.org/)
 * [Matplotlib](http://matplotlib.org/users/installing.html)
-
-
-<br>
-
+* [Seaborn](https://seaborn.pydata.org/)
 
 ## Usage 
-
-#### Clone this repository
 ```bash
-$ git clone git@github.com:HeroKillerEver/gan_distribution_tutorial.git
-$ cd gan_distribution_tutorial
+$ python main.py --help
 ```
+This will illustrate all the arguments you could play with the code. 
+```bash
+A simple demo using gan to generate gamma distributions
 
+optional arguments:
+  -h, --help            show this help message and exit
+  --gpu GPU             gpu to use: 0, 1, 2, 3, 4. Default: None
+  --lr LR               learning rate. Default: 1e-4
+  --iterations ITERATIONS
+                        num of iterations. Default: 2000
+  --alpha ALPHA         Gamma alpha. Default: 2.
+  --scale SCALE         Gamma beta. Default: .5
+  --sample_size SAMPLE_SIZE
+                        sample size. Default: 100
+  --model_save_dir MODEL_SAVE_DIR
+                        directory to save model. Default: checkpoints
+  --res_save_dir RES_SAVE_DIR
+                        directory to save results. Default: results
+  --log_save_dir LOG_SAVE_DIR
+                        directory to save logs. Default: logs
+
+###########################################################################
+```
 #### Train the model
+Defaultly, the code will train a generator to fit the `Gamma(2, 2)`, you can play with the code by changing the argument `--alpha` and `--beta` to model other Gamma distributions. For example:
 ```bash
-$ python main.py --mode='train' --shape=2. --scale=2.
+$ python main.py --alpha=1. --beta=2.
 ```
-note that shape and scale correspond k and theta in Gamma distribution
+## Results and Logs
+The code will save a video which illustrates the training procedure in the directory `results/` defaultly.
 
-
-#### Evaluate the model
-```bash
-$ python main.py --mode='eval' --shape=2. --scale=2.
-```
-##### note --shape and --scale should remain the same value as training
-
-<br>
-
-## Results
-
-![alt text](jpg/gan-7000.png)
+## Author
+Haibin Yu/ [@HeroKillerEver](https://github.com/HeroKillerEver)
 
 
